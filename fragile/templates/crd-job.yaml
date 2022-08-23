@@ -1,0 +1,61 @@
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fragile-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: fragile-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: fragile-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fragile-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: fragile-sa
+    namespace: default
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fragile
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    spec:
+      serviceAccountName: fragile-sa
+      restartPolicy: Never
+      containers:
+      - name: helm
+        image: lachlanevenson/k8s-kubectl:v1.24.3
+        command:
+         - sh
+         - -cex
+         - |
+            kubectl replace -f /crd/crd.yaml
+        volumeMounts:
+        - name: crd
+          mountPath: "/crd"
+          readOnly: true
+      volumes:
+        - name: crd
+          configMap:
+            name: crd
+  backoffLimit: 4

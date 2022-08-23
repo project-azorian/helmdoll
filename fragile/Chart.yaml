@@ -1,0 +1,8 @@
+apiVersion: v2
+type: application
+name: fragile
+version: 0.1.0
+appVersion: "0.1.0"
+description: |
+  This helm chart is a demo of a chart that can do additional manaagement of CRDs beyond what helm
+  does itself. It does this via a pre-upgrade hook that replaces the CRDs in the cluster each time.

@@ -1,0 +1,10 @@
+apiVersion: v2
+type: application
+name: robust
+version: 0.1.0
+appVersion: "0.1.0"
+description: |
+  This helm chart is a demo of a chart that wraps another chart. The purpose here is to ensure that we do
+  not end up ever removing the child chart(s), which is useful when using an external helm orchestrator to
+  manage critical components of a cluster (eg the CNI) via helm. This approach is an unashamed 'hack' but
+  provides a path to emulate the 'protected chart' concept from Armada with more modern tooling.

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chart-release
+data:
+  values.yaml: |{{ .Values | toYaml | nindent 4 }}
+binaryData:
+  fragile.tar.gz: {{ .Files.Get "files/fragile-0.1.0.tgz" | b64enc }}
