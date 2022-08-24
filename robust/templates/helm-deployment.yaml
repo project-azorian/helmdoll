@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: robust-deployment
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: robust-deployment
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: robust-deployment
+    namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robust
+spec:
+  selector:
+    matchLabels:
+      app: robust
+  replicas: 1
+  strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: robust
+      annotations:
+        helm-release-revision: "{{ .Release.Revision }}"
+    spec:
+      serviceAccountName: robust-deployment
+      initContainers:
+      - name: helm
+        image: lachlanevenson/k8s-kubectl:v1.24.3
+        command:
+         - sh
+         - -cex
+         - |
+            if kubectl get job robust; then
+              kubectl wait --for=condition=complete job/robust
+            fi 
+      containers:
+      - name: wait
+        image: k8s.gcr.io/pause:3.1

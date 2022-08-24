@@ -2,4 +2,4 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-image: docker.io/nginx:stable
+project_replicas: 1

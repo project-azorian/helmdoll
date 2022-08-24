@@ -3,4 +3,4 @@
 # Declare variables to be passed into your templates.
 
 
-image: docker.io/nginx:alpine
+project_replicas: 56

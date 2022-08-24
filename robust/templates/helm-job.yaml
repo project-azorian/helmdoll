@@ -5,18 +5,6 @@ metadata:
   name: robust-sa
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: robust-sa
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: robust-sa
----
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: robust-sa
@@ -69,7 +57,7 @@ spec:
          - sh
          - -cex
          - |
-            helm upgrade \
+            helm upgrade --wait \
               --install fragile /chart-release/fragile.tar.gz \
               --values=/chart-release/values.yaml
         volumeMounts:
