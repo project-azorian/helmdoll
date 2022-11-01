@@ -46,9 +46,10 @@ spec:
          - sh
          - -cex
          - |
-            if kubectl get job robust; then
-              kubectl wait --for=condition=complete job/robust
-            fi 
+            until kubectl get job robust-{{ .Release.Revision }}; do
+              sleep 3
+            done
+            kubectl wait --for=condition=complete job/robust-{{ .Release.Revision }}
       containers:
       - name: wait
         image: k8s.gcr.io/pause:3.1

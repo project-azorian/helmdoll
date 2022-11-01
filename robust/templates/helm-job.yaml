@@ -1,50 +1,17 @@
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: robust-sa
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: robust-sa
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: robust-sa
-    namespace: default
----
+{{ define "helmdoll_job" }}
+{{- $envAll := index . "envAll" -}}
+{{- $release_revision := index . "releaseRevision" -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: robust-cleanup
+  name: robust-{{ $release_revision }}
+  labels:
+    helmdoll_release: {{ $envAll.Release.Name }}
+  {{ if not ( eq $release_revision 1 ) }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
-spec:
-  template:
-    spec:
-      serviceAccountName: robust-sa
-      restartPolicy: Never
-      containers:
-      - name: helm
-        image: lachlanevenson/k8s-kubectl:v1.24.3
-        command:
-         - sh
-         - -cex
-         - |
-            if kubectl get job robust; then
-              kubectl delete job robust
-            fi
-  backoffLimit: 4
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: robust
+  {{ end }}
 spec:
   template:
     spec:
@@ -68,4 +35,53 @@ spec:
         - name: chart-release
           configMap:
             name: chart-release
+  backoffLimit: 4
+{{ end }}
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: robust-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: robust-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: robust-sa
+    namespace: default
+---
+{{ include "helmdoll_job" ( dict "envAll" . "releaseRevision" 1 ) }}
+---
+{{ if not ( eq .Release.Revision 1 ) }}
+{{ include "helmdoll_job" ( dict "envAll" . "releaseRevision" .Release.Revision ) }}
+---
+{{ end }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: robust-cleanup
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: robust-sa
+      restartPolicy: Never
+      containers:
+      - name: helm
+        image: lachlanevenson/k8s-kubectl:v1.24.3
+        command:
+         - sh
+         - -cex
+         - |
+            kubectl delete jobs -l helmdoll_release={{ .Release.Name }}
   backoffLimit: 4

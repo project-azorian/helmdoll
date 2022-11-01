@@ -3,4 +3,4 @@
 # Declare variables to be passed into your templates.
 
 
-project_replicas: 56
+project_replicas: 2

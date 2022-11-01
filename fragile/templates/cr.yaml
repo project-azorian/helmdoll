@@ -1,7 +1,0 @@
-apiVersion: "example.local/v1alpha1"
-kind: "Project"
-metadata:
-  name: "example-project"
-  namespace: "default"
-spec:
-  replicas: {{ .Values.project_replicas }}
